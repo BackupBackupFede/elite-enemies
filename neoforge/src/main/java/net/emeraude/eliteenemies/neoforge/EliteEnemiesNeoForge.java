@@ -1,0 +1,15 @@
+package net.emeraude.eliteenemies.neoforge;
+
+import net.emeraude.eliteenemies.EliteEnemies;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+
+/** NeoForge entry point (both sides). All logic is loader-agnostic in {@link EliteEnemies}. */
+@Mod(EliteEnemies.MOD_ID)
+public final class EliteEnemiesNeoForge {
+
+    public EliteEnemiesNeoForge(IEventBus modBus, ModContainer container) {
+        EliteEnemies.init();
+    }
+}
