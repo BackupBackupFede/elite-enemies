@@ -1,130 +1,97 @@
-# Multiloader mod template — NeoForge + Fabric, 1.21.1 + 26.2 + 26.3
+# Elite Enemies
 
-One repository, two loaders, three Minecraft versions, three publishing platforms.
-Every configuration in here has been built and verified, not just written.
+**Rare mobs become elites: stronger, geared, announced — and they drop their gear.**
 
-> Reconstructed on 2026-10-28 after the PC reset: the original template only lived on this disk.
-> Source: the first commit of `emerald-reserve` (the template's raw output, README included),
-> plus what later mods added to the shared files (`common/build.gradle`, `selftest.ps1`,
-> `release.yml`, taken from `fair-death`). `new-mod.ps1` was rewritten.
+Every now and then a hostile mob spawns as an elite. It hits harder, takes more to kill, carries
+a named piece of gear enchanted beyond vanilla limits, and drops it when it dies.
+Nothing to install on the client.
 
-## Clone it
+Fabric and NeoForge, Minecraft 1.21.1, 26.2 and 26.3. No dependencies.
 
-```powershell
-.\new-mod.ps1 -ModId cooltweak -ModName "Cool Tweak" -Destination ..\cool-tweak          # Tier B/C
-.\new-mod.ps1 -ModId cooltweak -ModName "Cool Tweak" -Destination ..\cool-tweak -Tier A  # server only
-```
+## Four ranks
 
-Then edit the `TODO` descriptions in `fabric.mod.json` and `neoforge.mods.toml`.
+| Rank | Name | Health | Gear examples |
+|---|---|---|---|
+| Common | ★ grey | ×1.5 | Knockback Stick (Knockback V), Match (Fire Aspect IV) |
+| Uncommon | ★★ green | ×1.9 | Apocalypse (Sharpness VI + Smite VI), Multiplier (Piercing + Multishot) |
+| Rare | ★★★ purple | ×2.8 | Vorpal Blade (Sharpness VII), Longshot (Power VIII) |
+| Legendary | ★★★★ gold | ×3.7 | Kingslayer (Sharpness X), Earthshaker (Density VIII + Breach IV) |
 
-## Test
+Higher ranks also get more armour, speed, knockback resistance and base damage. The damage bonus
+applies to the mob's own attack, not to the weapon it holds.
 
-- `.\selftest.ps1` — starts a real dedicated server per loader x Minecraft line, runs
-  `EliteEnemiesSelfTest` on a fake player, prints PASS/FAIL and stops. The only cheap proof a mixin
-  still applies: Mixin resolves its targets at runtime, so compiling proves nothing.
-  **Replace the example check** with what your mod does, and add a *witness* (the same check with
-  the feature off must fail, or it measures nothing).
-- `.\build-all.ps1` — builds every line and lists class counts per jar (they must match).
-- Plain-Java logic goes under `.../core/` with JUnit tests in `common/src/test`; the build fails if
-  `core/` imports Minecraft.
-- Calls whose shape differs between 1.21.1 and 26.x go in a `compat/Compat.java` written twice,
-  once in `java-legacy/` and once in `java-modern/`; only one folder is compiled.
+## What players see
 
-## Build
+- A **boss bar** with the elite's name and health, within 32 blocks.
+- A **chat announcement** for rare and legendary elites, with a sound and a beam of particles.
+- Zombies, skeletons, piglins and illagers visibly wear or hold their piece. Every elite drops
+  it, undamaged, on top of its normal drops.
+- Optional: elites glow through walls in their rank's colour.
 
-```bash
-./gradlew build                            # the default line (minecraft_version in gradle.properties)
-./gradlew build -Pminecraft_version=1.21.1 # any other line of the MATRIX
-```
+## Fair by default
 
-Jars land in `fabric/build/libs/` and `neoforge/build/libs/`, named
-`<mod_id>-<loader>-<mcversion>-<modversion>.jar`, so all four coexist.
+- **No elites from spawners**, spawn eggs or commands: they cannot be farmed.
+- **No elites at the bottom of unreachable caves**: an elite only appears within 24 blocks of
+  the nearest player's height.
+- One elite per minute at most, and never two within 24 blocks in 10 minutes.
+- A new elite does not despawn for 5 minutes.
+- Elites are always adults (a baby would drop nothing).
 
-Requires JDK 25 for the Gradle process itself (Gradle 9.5 + Loom), even when building 1.21.1,
-whose *toolchain* is Java 21 — the foojay resolver downloads that one automatically.
+## Commands
 
-```powershell
-$env:JAVA_HOME = 'C:\path\to\jdk-25'
-```
+All for operators.
 
-## Adding a Minecraft version
+| Command | |
+|---|---|
+| `/eliteenemies settings` | the main switches, in a chest menu |
+| `/eliteenemies spawn <rank>` | an elite zombie in front of you, to try it out |
+| `/eliteenemies reload` | reload the config |
 
-**One file.** Add a row to `MATRIX` in `build.gradle` — CI reads that list straight out of the
-file, so there is nothing else to keep in sync.
+## Config
 
-## The three tiers
+`config/eliteenemies.json`, written with every default on first start:
 
-Pick one deliberately per mod; it decides the porting cost, not the market.
+| Key | Default | |
+|---|---|---|
+| `enabled` | `true` | master switch |
+| `chancePercent` | `1.0` | chance per eligible mob spawn |
+| `cooldownSeconds` | `60` | no other elite anywhere for this long |
+| `protectedRadius`, `protectedMinutes` | `24`, `10` | no other elite this close, for this long |
+| `persistMinutes` | `5` | a new elite does not despawn |
+| `maxHeightGap` | `24` | blocks above or below the nearest player; `0` = no limit |
+| `allowSpawners` | `false` | elites from spawners and trial spawners |
+| `weightCommon` … `weightLegendary` | `50`, `30`, `9`, `2` | rank weights |
+| `announceFrom` | `RARE` | `COMMON` … `LEGENDARY`, or `NONE` |
+| `announceRadius` | `128` | chat, sound and beam range |
+| `sound`, `beam`, `glow`, `bossBar` | on, on, off, on | |
+| `bossBarRange` | `32` | |
+| `mobs` | 27 vanilla hostiles | entity ids; modded mobs can be added |
 
-| Tier | Content | Port cost 1.21.1 <-> 26.2 |
-|------|---------|---------------------------|
-| **A — server only** | mechanics, worldgen, biomes, structures, enchantments, loot, commands | ~nil, often the same source recompiled |
-| **B — both sides** | blocks, items, entities | 2-3x, concentrated in rendering |
-| **C — client only** | perf, QoL, HUD | highest, but the Fabric audience is huge |
+## Good to know
 
-Default to A when the mod allows it. Only static registries (blocks, items, entities, block
-entities, fluids, effects) force a client install; data-driven registries (biomes, structures,
-dimensions, enchantments, recipes, loot, damage types) are sent by the server and work against a
-vanilla client.
+- Elites are plain vanilla mobs with modifiers, a name and entity tags. Remove the mod and they
+  stay as named, equipped mobs; nothing else is left in the world.
+- An elite is made when it spawns. Mobs already in the world are never converted.
 
-**Making it Tier A:** `new-mod.ps1 -Tier A`, or by hand: delete `common/.../client/`,
-`EliteEnemiesFabricClient`, `EliteEnemiesNeoForgeClient`, and the `"client"` entrypoint in
-`fabric.mod.json`. Declare `client_side: unsupported` on Modrinth — server admins filter on it.
+## Credits
 
-## Fabric API
+Inspired by [Mob Captains](https://modrinth.com/mod/mob-captains) by PuckiSilver (MIT), itself
+inspired by Atomic Stryker's Infernal Mobs. Elite Enemies reuses its rank balance and several of
+its item names, with thanks. It is a separate mod, not an official port.
 
-**Off by default** (`use_fabric_api=false` in `gradle.properties`). On 1.21.1 with Mojang
-mappings, Fabric API's own resource-loader mixin crashes a Fabric server at the first chunk — and
-the build stays green. Turn it on only when the mod needs it, and run a 1.21.1 server before
-believing it works.
+## Building
 
-When it is needed: Fabric Loader on its own neither unfreezes the vanilla registries before
-`onInitialize` nor mounts a mod's `assets/` as a resource pack — the second failure is silent, and
-shows up in game as missing textures and raw translation keys. Any mod that ships a texture, a
-lang file or a static registry entry needs it.
-
-Watch `Reloading ResourceManager:` in the log: it must name your mod. `vanilla` alone means none
-of your resources were loaded.
-
-## Publishing
-
-`release.yml` publishes to Modrinth + CurseForge + GitHub Releases when a tag is pushed. It stays
-dormant until configured; each platform is skipped when its token is missing.
-
-- Repo **variables**: `MODRINTH_ID`, `CURSEFORGE_ID`
-- Repo **secrets**: `MODRINTH_TOKEN`, `CURSEFORGE_TOKEN`
+The Gradle process needs JDK 25, even for the 1.21.1 line (its toolchain, Java 21, is downloaded
+automatically).
 
 ```bash
-git tag v0.1.0 && git push --tags
+./gradlew build                             # default line
+./gradlew build -Pminecraft_version=1.21.1  # any line of MATRIX in build.gradle
 ```
 
-One version is published **per Minecraft version per loader**, numbered `1.0.0+1.21.1-fabric`.
-A Modrinth version has ONE primary file, and every loader it declares must be satisfied by that
-file: a Fabric jar and a NeoForge jar cannot share a version (`400 invalid_input: No
-fabric.mod.json present for Fabric file`). The tag must match `mod_version`, or nothing runs. The
-GitHub release is a separate job so that it happens exactly once, with every jar attached.
+Jars land in `fabric/build/libs/` and `neoforge/build/libs/`. `selftest.ps1` runs the in-game
+check on every loader and line.
 
-`release.yml` only runs at tag time, so its bugs stay invisible until the release you care about.
-Read it before the first tag of a new project, and watch the run: a platform whose token is missing
-is skipped **silently**, and the job still goes green.
+## License
 
-## Gotchas worth keeping
-
-- **Loom has two plugin IDs.** `net.fabricmc.fabric-loom` is `LoomNoRemapGradlePlugin`: it sets
-  `disableObfuscation = true` *and finalizes it*, so `officialMojangMappings()` then throws
-  "Cannot use Mojang mappings in a non-obfuscated environment" — and no Gradle property can undo
-  it. Obfuscated Minecraft (1.21.x) needs the classic `fabric-loom` ID. One Loom version serves
-  both eras; see the comment in `fabric/build.gradle`.
-- **26.x ships de-obfuscated.** No `mappings` line, and `implementation` rather than
-  `modImplementation` for fabric-loader — there is nothing to remap.
-- **Gradle 9 breaks `expand(project.properties)`.** Filter to string values first (done in
-  `build.gradle`), or the build fails fingerprinting `allprojects`.
-- **`modImplementation` does not exist under the no-remap plugin** either, so 26.x declares Fabric
-  API with plain `implementation`. The error names a missing method on `DefaultDependencyHandler`
-  and never mentions the plugin.
-- **`pack.mcmeta` is mandatory** as soon as the mod ships `assets/` or `data/`. Without it NeoForge
-  mounts the pack and reads nothing from it, with no error. Its `pack_format` is per MC version and
-  lives in `MATRIX`.
-- **`ResourceLocation` became `Identifier` in 26.x.** Never name that type in shared code; the
-  `Registry.register(reg, "ns:path", value)` String overload is identical across every version.
-- **First build of a new MC version takes 2-15 min** (Minecraft gets decompiled), then seconds.
+MIT. See [LICENSE](LICENSE).

@@ -4,7 +4,12 @@
   "package": "net.emeraude.eliteenemies.mixin",
   "compatibilityLevel": "${mixin_compat}",
   "mixins": [
-    "DedicatedServerMixin"
+    "CommandsMixin",
+    "DedicatedServerMixin",
+    "MinecraftServerMixin",
+    "MobMixin",
+    "MobSpawnReasonMixin",
+    "ServerLevelMixin"
   ],
   "client": [],
   "injectors": {

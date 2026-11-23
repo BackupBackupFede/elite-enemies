@@ -12,7 +12,7 @@ authors = "${mod_author}"
 credits = "Support: https://ko-fi.com/acesoverdeuces777"
 displayURL = "https://github.com/BackupBackupFede/${mod_repo}"
 description = '''
-TODO description.
+Rare mobs become elites: stronger, wearing named gear enchanted past vanilla limits, announced in chat with a boss bar, and they drop that gear when they die. Server-side only, works with vanilla clients. An alternative to Mob Captains (PuckiSilver, MIT).
 
 Support: https://ko-fi.com/acesoverdeuces777
 '''

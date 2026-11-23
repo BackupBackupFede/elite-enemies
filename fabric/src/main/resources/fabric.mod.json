@@ -3,7 +3,7 @@
   "id": "${mod_id}",
   "version": "${mod_version}",
   "name": "${mod_name}",
-  "description": "TODO one-paragraph description (this text is what Modrinth and CurseForge show).",
+  "description": "Rare mobs become elites: stronger, wearing named gear enchanted past vanilla limits, announced in chat with a boss bar, and they drop that gear when they die. Server-side only, works with vanilla clients. An alternative to Mob Captains (PuckiSilver, MIT).",
   "authors": ["${mod_author}"],
   "contact": {
     "homepage": "https://github.com/BackupBackupFede/${mod_repo}",
